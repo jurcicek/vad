@@ -206,6 +206,29 @@ export class FrameProcessor implements FrameProcessorInterface {
     ) {
       this.speechRealStartFired = true
       handleEvent({ msg: Message.SpeechRealStart })
+
+      /**
+       * Fires Message.SpeechFrame with accumulated audio from speech start to current point.
+       * This is the first SpeechFrame event after speech has been confirmed as real speech
+       * (i.e., after minSpeechFrames threshold has been reached).
+       * 
+       * The audio contains all frames from the beginning of the speech segment up to and
+       * including the current frame, concatenated into a single Float32Array.
+       * This provides the complete audio context from speech start to the confirmation point.
+       */
+      handleEvent({ msg: Message.SpeechFrame, audio: concatArrays(this.audioBuffer.map((item) => item.frame)) })
+    }
+
+    if (this.speechRealStartFired && this.speechFrameCount > this.minSpeechFrames) {
+      /**
+       * Fires Message.SpeechFrame with the current audio frame during ongoing speech.
+       * This event is fired for each subsequent frame after speech has been confirmed as real
+       * (i.e., after the first SpeechFrame event has been sent).
+       * 
+       * The audio contains only the current frame being processed, allowing for real-time
+       * streaming of confirmed speech audio data.
+       */
+      handleEvent({ msg: Message.SpeechFrame, audio: frame })
     }
 
     if (
@@ -250,6 +273,19 @@ export type FrameProcessorEvent =
     }
   | {
       msg: Message.SpeechRealStart
+    }
+  | {
+      /** 
+       * Fired when confirmed speech audio is available for processing.
+       * 
+       * - First occurrence: Contains accumulated audio from speech start to confirmation point
+       * - Subsequent occurrences: Contains only the current audio frame
+       * 
+       * This event is only fired after speech has been confirmed as real speech
+       * (i.e., after minSpeechFrames threshold has been reached).
+       */
+      msg: Message.SpeechFrame
+      audio: Float32Array
     }
   | {
       msg: Message.SpeechEnd

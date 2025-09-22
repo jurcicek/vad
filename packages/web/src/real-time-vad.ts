@@ -45,6 +45,9 @@ interface RealTimeVADCallbacks {
 
   /** Callback to run when speech is detected as valid. (i.e. not a misfire) */
   onSpeechRealStart: () => any
+
+  /** Callback to run for each speech frame during speech detection */
+  onSpeechFrame: (frame: Float32Array) => any
 }
 
 type AssetOptions = {
@@ -94,6 +97,9 @@ export const getDefaultRealTimeVADOptions = (
     },
     onSpeechRealStart: () => {
       log.debug("Detected real speech start")
+    },
+    onSpeechFrame: () => {
+      log.debug("Processing speech frame")
     },
     baseAssetPath: "./",
     onnxWASMBasePath: "./",
@@ -405,6 +411,10 @@ export class AudioNodeVAD {
 
       case Message.SpeechEnd:
         this.options.onSpeechEnd(ev.audio as Float32Array)
+        break
+
+      case Message.SpeechFrame:
+        this.options.onSpeechFrame(ev.audio as Float32Array)
         break
     }
   }
