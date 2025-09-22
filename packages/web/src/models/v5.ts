@@ -51,7 +51,8 @@ export class SileroV5 {
 
     // @ts-ignore
     const [isSpeech] = out["output"]?.data
-    const notSpeech = 1 - isSpeech
-    return { notSpeech, isSpeech }
+    const isSpeechNum = Number(isSpeech)
+    const notSpeech = 1 - isSpeechNum
+    return { notSpeech, isSpeech: isSpeechNum }
   }
 }
